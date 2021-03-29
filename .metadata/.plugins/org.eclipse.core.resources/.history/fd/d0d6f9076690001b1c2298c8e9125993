@@ -1,0 +1,54 @@
+package kopo.kafka;
+
+import java.util.Properties;
+import java.util.Scanner;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+public class App {
+	private static final String TOPIC_NAME = "quickstart-events";
+	private static final String FIN_MESSAGE = "exit";
+	
+	private final static Logger Log = LoggerFactory.getLogger("App");
+	
+	public static void main(String[] args) {
+		
+		Properties properties = new Properties();
+		properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka_server:9092");
+		properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+		properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+		
+		KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
+		
+		while(true) {
+			Scanner sc = new Scanner(System.in);
+			System.out.print("Input > ");
+			String message = sc.nextLine();
+			
+			ProducerRecord<String, String> record = new ProducerRecord<String, String>(TOPIC_NAME, message);
+			
+			try {
+				producer.send(record);
+			} catch(Exception e) {
+				Log.info("Error : " + e.toString());
+			} finally {
+				producer.flush();
+			}
+			
+			if(message.equals(FIN_MESSAGE)) {
+				producer.close();
+				sc.close();
+				break;
+			}
+		}
+	}
+	
+	
+	
+}
